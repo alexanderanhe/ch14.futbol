@@ -29,8 +29,7 @@ export default function Video({ _id, src, mime }: VideoProps) {
 
     switch (event.key.toLowerCase()) {
       case " ":
-        if (tagName === "button") return
-      // eslint-disable-next-line no-fallthrough
+        break // if (tagName === "button") break
       case "k":
         togglePlay()
         break
@@ -62,7 +61,7 @@ export default function Video({ _id, src, mime }: VideoProps) {
   return (
     <article className={`video-container ${current ? 'current' : ''}`} data-volume-level="high" data-id={_id}>
       <Controls video={video} {...events} />
-      <video autoPlay playsInline ref={video}>
+      <video playsInline ref={video}>
         <source src={src} type="video/mp4" data-mime={ mime } />
         {/* <track kind="captions" srclang="en" src="assets/subtitles.vtt"> */}
       </video>

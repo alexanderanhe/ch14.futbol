@@ -68,6 +68,7 @@ export function useIntersectionVideo ({ video, src }: UseIntersectionVideoProps)
       const { current: videoEl } = video
       if (isIntersecting) {
         videoEl.play();
+        videoEl.autoplay = isIntersecting;
       } else videoEl.pause();
       videoEl.parentElement?.classList.toggle("current", isIntersecting);
       setCurrent(isIntersecting);
