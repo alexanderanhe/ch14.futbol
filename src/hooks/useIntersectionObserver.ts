@@ -2,9 +2,12 @@ import { useEffect, useState } from 'react'
 import { usePreferencesContext } from '../context/preferences'
 
 type UseIntersectionVideoProps = {
-  video: VideoReference
-  src: string
-  type?: string
+  title: string;
+  description: string;
+  video_at: string | Date;
+  video: VideoReference;
+  src: string;
+  type?: string;
 }
 type UseIntersectionImageProps = {
   image: ImageReference
@@ -51,7 +54,7 @@ export const nextItem = (item: HTMLElement) => {
   }
 }
 
-export function useIntersectionVideo ({ video, src }: UseIntersectionVideoProps) {
+export function useIntersectionVideo ({ title, video, src }: UseIntersectionVideoProps) {
   const [preferences, dispatch] = usePreferencesContext();
   const [playing, setPlaying] = useState<boolean>(false);
   const [current, setCurrent] = useState<boolean>(false);
@@ -68,7 +71,14 @@ export function useIntersectionVideo ({ video, src }: UseIntersectionVideoProps)
       const { current: videoEl } = video
       if (isIntersecting) {
         videoEl.play();
-        videoEl.autoplay = isIntersecting;
+        if ("mediaSession" in navigator) {
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: title,
+            // artist: "Podcast Host",
+            // album: "Podcast Name",
+            artwork: [{ src: videoEl.poster }],
+          });
+        }
       } else videoEl.pause();
       videoEl.parentElement?.classList.toggle("current", isIntersecting);
       setCurrent(isIntersecting);

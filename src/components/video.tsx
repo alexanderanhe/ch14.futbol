@@ -5,12 +5,16 @@ import Loader from './loader'
 
 type VideoProps = {
   _id: string,
+  title: string;
+  description: string;
+  video_at: string | Date;
   src: string,
-  mime: string
+  mime: string;
+  autoPlay?: boolean;
 }
-export default function Video({ _id, src, mime }: VideoProps) {
+export default function Video({ _id, title, description, video_at, src, mime, autoPlay }: VideoProps) {
   const video = useRef<HTMLVideoElement>(null) as VideoReference;
-  const { current, ...events } = useIntersectionVideo({ video, src, type: mime });
+  const { current, ...events } = useIntersectionVideo({ title, description, video_at, video, src, type: mime });
   useEffect(() => {
     if  (current) {
       document.addEventListener("keydown", handleKeyDown);
@@ -61,7 +65,7 @@ export default function Video({ _id, src, mime }: VideoProps) {
   return (
     <article className={`video-container ${current ? 'current' : ''}`} data-volume-level="high" data-id={_id}>
       <Controls video={video} {...events} />
-      <video playsInline ref={video}>
+      <video autoPlay={autoPlay} playsInline ref={video}>
         <source src={src} type="video/mp4" data-mime={ mime } />
         {/* <track kind="captions" srclang="en" src="assets/subtitles.vtt"> */}
       </video>

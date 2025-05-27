@@ -17,29 +17,14 @@ export default function Feed() {
     <PreferencesContextProvider>
       <Section addMedia={setMedia}>
         { media?.map((media: Media, i) => (
-          <Media key={`feed-${media._id}-${i}`} media={media} />
+          media.codec_type.includes('video')
+          ? <VideoContainer key={`feed-${media._id}-${i}`} {...media} autoPlay={!i} src={`${import.meta.env.VITE_API_URL}/video/stream/${media._id}`} mime={media.type} />
+          : <ImageContainer key={`feed-${media._id}-${i}`} {...media} src={`/api/image/${media._id}`} mime={media.type} />
         ))}
       </Section>
       <FeedNav />
     </PreferencesContextProvider>
   )
-}
-
-function Media({ media }: { media: Media}) {
-  if (media.codec_type.includes('video')) {
-    return <VideoContainer
-      {...media}
-      src={`${import.meta.env.VITE_API_URL}/video/stream/${media._id}`}
-      mime={media.type}
-    />
-  } else if (media.codec_type.includes('image')) {
-    return <ImageContainer
-      {...media}
-      src={`/api/image/${media._id}`}
-      mime={media.type}
-    />
-  }
-  return <></>
 }
 
 function Section({ children, addMedia }: { children: React.ReactNode, addMedia: (media: (Media[] | ((prev: Media[]) => Media[]))) => void }) {

@@ -36,9 +36,13 @@ export function PreferencesContextProvider({ children }: PreferencesContextProvi
 
 export const usePreferencesContext = () => useContext(PreferencesContext);
 
-interface ReducerAction {
-  type: string;
-  payload?: any;
+type ReducerAction = {
+  type: 'TOGGLE_AUTOPLAY';
+} | {
+  type: 'TOGGLE_MUTED';
+} | {
+  type: 'SET_VOLUME';
+  payload: number;
 }
 
 interface ReducerState {

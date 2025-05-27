@@ -16,8 +16,11 @@ type ImageReference = React.RefObject<HTMLImageElement> & {
 
 type Media = {
   _id: string
-  codec_type: string
-  type: string
-  created_at: Date | string
-  src?: string
+  title: string;
+  description: string;
+  codec_type: string;
+  type: string;
+  video_at: Date | string;
+  created_at: Date | string;
+  src?: string;
 }
