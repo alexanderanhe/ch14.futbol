@@ -1,21 +1,41 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useIntersectionVideo } from '../hooks/useIntersectionObserver'
 import { usePreferencesContext } from '../context/preferences'
 import Loader from './loader'
 
 type VideoProps = {
-  _id: string,
+  _id: string;
   title: string;
   description: string;
   video_at: string | Date;
-  src: string,
+  src: string;
+  vtts: Record<string, string>;
   mime: string;
   autoPlay?: boolean;
 }
-export default function Video({ _id, title, description, video_at, src, mime, autoPlay }: VideoProps) {
+export default function Video({ _id, title, description, video_at, src, vtts, mime, autoPlay }: VideoProps) {
   const video = useRef<HTMLVideoElement>(null) as VideoReference;
   const { current, ...events } = useIntersectionVideo({ title, description, video_at, video, src, type: mime });
+  const [vttsBlob, setVttsBlob] = useState<string[][]>([])
+  const v = async () => {
+    const blobs = await Promise.all(
+      Object.entries(vtts).map(async ([lang, src]) => {
+        const req = await fetch(src);
+        const content = await req.text();
+        const blob = URL.createObjectURL(
+          new Blob([content], {
+            type: "text/vtt",
+            endings: 'native',
+          })
+        );
+        return [lang, blob]
+      })
+    );
+    setVttsBlob(blobs);
+  }
+
   useEffect(() => {
+    v();
     if  (current) {
       document.addEventListener("keydown", handleKeyDown);
       return () => {
@@ -67,7 +87,9 @@ export default function Video({ _id, title, description, video_at, src, mime, au
       <Controls video={video} {...events} />
       <video autoPlay={autoPlay} playsInline ref={video}>
         <source src={src} type="video/mp4" data-mime={ mime } />
-        {/* <track kind="captions" srclang="en" src="assets/subtitles.vtt"> */}
+        {vttsBlob?.map(([lang, vtt]) => (
+          <track key={`vtt-${lang}`} kind="captions" srcLang={lang} src={vtt} />
+        ))}
       </video>
       <Loader />
     </article>
@@ -203,6 +225,7 @@ export function Controls({
   return (
     <>
       <div className="thumbnail-img" ref={thumbnailImg}></div>
+      <div className="absolute bottom-0 flex justify-end w-full font-monka opacity-40 hover:opacity-100 p-2">ch14</div>
       <div className="video-controls-container">
         <div className="timeline-container" ref={timelineContainer}>
           <div className="timeline">

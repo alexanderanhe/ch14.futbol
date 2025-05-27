@@ -18,7 +18,14 @@ export default function Feed() {
       <Section addMedia={setMedia}>
         { media?.map((media: Media, i) => (
           media.codec_type.includes('video')
-          ? <VideoContainer key={`feed-${media._id}-${i}`} {...media} autoPlay={!i} src={`${import.meta.env.VITE_API_URL}/video/stream/${media._id}`} mime={media.type} />
+          ? <VideoContainer
+              key={`feed-${media._id}-${i}`}
+              {...media}
+              autoPlay={!i}
+              src={`${import.meta.env.VITE_API_URL}/video/stream/${media._id}`}
+              mime={media.type}
+              vtts={{ "en": `${import.meta.env.VITE_API_URL}/video/vtt/${media._id}`}}
+            />
           : <ImageContainer key={`feed-${media._id}-${i}`} {...media} src={`/api/image/${media._id}`} mime={media.type} />
         ))}
       </Section>

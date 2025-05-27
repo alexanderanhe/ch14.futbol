@@ -54,7 +54,7 @@ export const nextItem = (item: HTMLElement) => {
   }
 }
 
-export function useIntersectionVideo ({ title, video, src }: UseIntersectionVideoProps) {
+export function useIntersectionVideo ({ title, video }: UseIntersectionVideoProps) {
   const [preferences, dispatch] = usePreferencesContext();
   const [playing, setPlaying] = useState<boolean>(false);
   const [current, setCurrent] = useState<boolean>(false);
@@ -82,12 +82,12 @@ export function useIntersectionVideo ({ title, video, src }: UseIntersectionVide
       } else videoEl.pause();
       videoEl.parentElement?.classList.toggle("current", isIntersecting);
       setCurrent(isIntersecting);
-      if (!videoEl.src) {
-        // fetch(src)
-        //   .then(res => res.blob())
-        //   .then((blob) => videoEl.src = URL.createObjectURL(blob));
-        videoEl.src = src;
-      }
+      // if (!videoEl.src) {
+      //   // fetch(src)
+      //   //   .then(res => res.blob())
+      //   //   .then((blob) => videoEl.src = URL.createObjectURL(blob));
+      //   videoEl.src = src;
+      // }
     }
 
     videoEl.addEventListener("click", togglePlay, true);
@@ -130,6 +130,7 @@ export function useIntersectionVideo ({ title, video, src }: UseIntersectionVide
   }
   function togglePlay() {
     const { current: videoEl } = video
+    console.log("CLICK", playing)
     if (playing) {
       videoEl.pause()
     } else videoEl.play()
@@ -173,6 +174,7 @@ export function useIntersectionVideo ({ title, video, src }: UseIntersectionVide
     video.current.parentElement?.classList.toggle("captions", isHidden)
   }
   function handleEnded() {
+    console.log("FINISH", preferences.autoPlay)
     if (preferences.autoPlay && video.current.parentElement?.nextElementSibling) {
       next();
     }

@@ -1,9 +1,10 @@
 import { useEffect, useRef } from "react"
 import { usePreferencesContext } from "../context/preferences";
 import { nextItem, prevItem } from "../hooks/useIntersectionObserver";
+import { ArrowPathIcon } from '@heroicons/react/24/solid';
 
 export default function FeedNav() {
-  const [ , dispatch] = usePreferencesContext();
+  const [ { autoPlay }, dispatch] = usePreferencesContext();
   const nav = useRef<HTMLDivElement>(null); // .nav
   const buttonUp = useRef<HTMLButtonElement>(null); // .nav button#up
   const buttonDown = useRef<HTMLButtonElement>(null); // .nav button#down
@@ -15,9 +16,9 @@ export default function FeedNav() {
   useEffect(() => {
     buttonUp.current?.addEventListener("click", prev);
     buttonDown.current?.addEventListener("click", next);
-    buttonScrollDown.current?.addEventListener("click", autoPlay);
+    buttonScrollDown.current?.addEventListener("click", handleAutoPlay);
     return () => {
-      buttonScrollDown.current?.removeEventListener("click", autoPlay);
+      buttonScrollDown.current?.removeEventListener("click", handleAutoPlay);
     }
   }, [])
 
@@ -29,7 +30,7 @@ export default function FeedNav() {
     const currentItem = document.querySelector(".current") as HTMLElement;
     nextItem(currentItem);
   }
-  function autoPlay() {
+  function handleAutoPlay() {
     dispatch({ type: "TOGGLE_AUTOPLAY" });
   }
 
@@ -47,11 +48,15 @@ export default function FeedNav() {
         </svg>
       </button>
       <button id="scroll-down" ref={buttonScrollDown}>
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M5 15C5 16.8565 5.73754 18.6371 7.05029 19.9498C8.36305 21.2626 10.1435 21.9999 12 21.9999C13.8565 21.9999 15.637 21.2626 16.9498 19.9498C18.2625 18.6371 19 16.8565 19 15V9C19 7.14348 18.2625 5.36305 16.9498 4.05029C15.637 2.73754 13.8565 2 12 2C10.1435 2 8.36305 2.73754 7.05029 4.05029C5.73754 5.36305 5 7.14348 5 9V15Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M12 6V14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          <path d="M15 11L12 14L9 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
+        { autoPlay ? (
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 15C5 16.8565 5.73754 18.6371 7.05029 19.9498C8.36305 21.2626 10.1435 21.9999 12 21.9999C13.8565 21.9999 15.637 21.2626 16.9498 19.9498C18.2625 18.6371 19 16.8565 19 15V9C19 7.14348 18.2625 5.36305 16.9498 4.05029C15.637 2.73754 13.8565 2 12 2C10.1435 2 8.36305 2.73754 7.05029 4.05029C5.73754 5.36305 5 7.14348 5 9V15Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M12 6V14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M15 11L12 14L9 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        ) : (
+          <ArrowPathIcon className="size-7" />
+        )}
       </button>
       <button id="collage" ref={buttonCollage}>
         <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" 

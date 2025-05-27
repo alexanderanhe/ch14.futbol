@@ -16,7 +16,7 @@ interface PreferencesContextProviderProps {
 }
   
 const initialState = {
-  autoPlay: false,
+  autoPlay: true,
   muted: true,
   volume: 1,
 };
