@@ -84,7 +84,7 @@ export default function Video({ videoData, src, vtts, autoPlay }: VideoProps) {
     }
   }
   return (
-    <article ref={videoContainer} className={`video-container group ${current ? 'current' : ''}`} data-volume-level="high" data-id={videoData._id}>
+    <article ref={videoContainer} className={`video-container group select-none ${current ? 'current' : ''}`} data-volume-level="high" data-id={videoData._id}>
       <Controls video={video} videoData={videoData} {...events} />
       <video autoPlay={autoPlay} playsInline ref={video}>
         <source src={src} type={ videoData.type.mime } />
