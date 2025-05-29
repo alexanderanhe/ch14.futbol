@@ -57,13 +57,13 @@ export default function UploadPage() {
 
             <div className="sm:col-span-4">
               <label className="block text-sm/6 font-medium">
-                Link
+                FileName
                 <div className="mt-2">
                   <div className="flex items-center rounded-md bg-white pl-3 outline-1 -outline-offset-1 outline-gray-300 focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-indigo-600">
                     <div className="shrink-0 text-base text-gray-500 select-none sm:text-sm/6">supabase/</div>
                     <input
-                      id="url"
-                      name="url"
+                      id="fileName"
+                      name="fileName"
                       type="text"
                       onChange={handleChange}
                       placeholder="file.mp4"
@@ -74,7 +74,7 @@ export default function UploadPage() {
               </label>
             </div>
 
-            <div className="sm:col-span-2 sm:col-start-1">
+            {/* <div className="sm:col-span-2 sm:col-start-1">
               <label className="block text-sm/6 font-medium">
                 Expire
                 <div className="mt-2">
@@ -87,7 +87,7 @@ export default function UploadPage() {
                   />
                 </div>
               </label>
-            </div>
+            </div> */}
 
             <div className="col-span-full">
               <label htmlFor="cover-photo" className="block text-sm/6 font-medium">

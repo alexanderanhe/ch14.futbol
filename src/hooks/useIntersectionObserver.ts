@@ -2,12 +2,9 @@ import { useEffect, useState } from 'react'
 import { usePreferencesContext } from '../context/preferences'
 
 type UseIntersectionVideoProps = {
-  title: string;
-  description: string;
-  video_at: string | Date;
   video: VideoReference;
-  src: string;
-  type?: string;
+  videoContainer: VideoContainerReference;
+  videoData: Media;
 }
 type UseIntersectionImageProps = {
   image: ImageReference
@@ -54,10 +51,13 @@ export const nextItem = (item: HTMLElement) => {
   }
 }
 
-export function useIntersectionVideo ({ title, video }: UseIntersectionVideoProps) {
+export function useIntersectionVideo ({ video, videoContainer, videoData }: UseIntersectionVideoProps) {
   const [preferences, dispatch] = usePreferencesContext();
   const [playing, setPlaying] = useState<boolean>(false);
   const [current, setCurrent] = useState<boolean>(false);
+  const [isScrubbing, setIsScrubbing] = useState<boolean>(false);
+  const [wasPaused, setWasPaused] = useState<boolean>(false);
+  const { title, description, thumbnails} = videoData;
 
   const next = () => nextItem(video.current.parentElement as HTMLElement);
   const prev = () => prevItem(video.current.parentElement as HTMLElement);
@@ -65,6 +65,7 @@ export function useIntersectionVideo ({ title, video }: UseIntersectionVideoProp
   useEffect(() => {
     if (!video.current) return
     const videoEl = video.current;
+    const timelineContainer = videoContainer.current.querySelector(".timeline-container") as HTMLDivElement;
 
     observer?.observe(videoEl)
     videoEl._handleIntersect = (isIntersecting: boolean) => {
@@ -73,21 +74,15 @@ export function useIntersectionVideo ({ title, video }: UseIntersectionVideoProp
         videoEl.play();
         if ("mediaSession" in navigator) {
           navigator.mediaSession.metadata = new MediaMetadata({
-            title: title,
+            title,
             // artist: "Podcast Host",
-            // album: "Podcast Name",
+            album: description,
             artwork: [{ src: videoEl.poster }],
           });
         }
       } else videoEl.pause();
       videoEl.parentElement?.classList.toggle("current", isIntersecting);
       setCurrent(isIntersecting);
-      // if (!videoEl.src) {
-      //   // fetch(src)
-      //   //   .then(res => res.blob())
-      //   //   .then((blob) => videoEl.src = URL.createObjectURL(blob));
-      //   videoEl.src = src;
-      // }
     }
 
     videoEl.addEventListener("click", togglePlay, true);
@@ -99,6 +94,10 @@ export function useIntersectionVideo ({ title, video }: UseIntersectionVideoProp
     videoEl.addEventListener("fullscreenchange", toggleFullscreenChange, true);
     videoEl.addEventListener("enterpictureinpicture", togglePictureInPicture, true);
     videoEl.addEventListener("leavepictureinpicture", togglePictureInPicture, true);
+    timelineContainer?.addEventListener("mousemove", handleTimelineUpdate)
+    timelineContainer?.addEventListener("mousedown", toggleScrubbing)
+    videoContainer.current.addEventListener("mouseup", e => isScrubbing && toggleScrubbing(e))
+    videoContainer.current.addEventListener("mousemove", e => isScrubbing && handleTimelineUpdate(e))
     return () => {
       videoEl.removeEventListener("click", togglePlay, true);
       videoEl.removeEventListener("play", eventListenerPlay, true);
@@ -109,6 +108,14 @@ export function useIntersectionVideo ({ title, video }: UseIntersectionVideoProp
       videoEl.removeEventListener("fullscreenchange", toggleFullscreenChange, true);
       videoEl.removeEventListener("enterpictureinpicture", togglePictureInPicture, true);
       videoEl.removeEventListener("leavepictureinpicture", togglePictureInPicture, true);
+      timelineContainer?.removeEventListener("mousemove", handleTimelineUpdate)
+      timelineContainer?.removeEventListener("mousedown", toggleScrubbing)
+      videoContainer.current?.removeEventListener("mouseup", e => {
+        if (isScrubbing) toggleScrubbing(e)
+      })
+      videoContainer.current?.removeEventListener("mousemove", e => {
+        if (isScrubbing) handleTimelineUpdate(e)
+      })
     }
   }, [video.current]);
 
@@ -174,13 +181,71 @@ export function useIntersectionVideo ({ title, video }: UseIntersectionVideoProp
     video.current.parentElement?.classList.toggle("captions", isHidden)
   }
   function handleEnded() {
-    console.log("FINISH", preferences.autoPlay)
     if (preferences.autoPlay && video.current.parentElement?.nextElementSibling) {
       next();
     }
   }
   function skip(duration: number) {
     video.current.currentTime += duration
+  }
+
+  function toggleScrubbing(e: MouseEvent) {
+    if (!videoContainer.current) return;
+    const videoContainerEl = videoContainer.current;
+    const videoEl = video.current as HTMLVideoElement;
+    const timelineContainer = videoContainerEl.querySelector(".timeline-container") as HTMLDivElement
+
+    const rect = timelineContainer?.getBoundingClientRect()
+    if (!rect || !videoEl) return;
+    const percent = Math.min(Math.max(0, e.x - rect.x), rect.width) / rect.width
+    setIsScrubbing((e.buttons & 1) === 1)
+    videoContainerEl.classList.toggle("scrubbing", isScrubbing)
+    if (isScrubbing) {
+      setWasPaused(videoEl?.paused);
+      videoEl.pause()
+    } else {
+      videoEl.currentTime = percent * video.current?.duration
+      if (!wasPaused) video.current?.play()
+    }
+    handleTimelineUpdate(e)
+  }
+
+  function handleTimelineUpdate(e: MouseEvent) {
+    console.log(thumbnails)
+    if (!videoContainer.current || !thumbnails) return;
+    const videoContainerEl = videoContainer.current;
+    const previewImg = videoContainerEl.querySelector(".preview-img") as HTMLDivElement;
+    const thumbnailImg = videoContainerEl.querySelector(".thumbnail-img") as HTMLImageElement;
+    const timelineContainer = videoContainerEl.querySelector(".timeline-container") as HTMLDivElement
+    const [thumbnail] = thumbnails;
+    const { image: prevImageSource, resolution, total} = thumbnail;
+    const [width, height] = resolution.split('x');
+
+    const rect = timelineContainer?.getBoundingClientRect()
+    if (!rect || !video.current) return;
+    const percent = isNaN(Math.min(Math.max(0, e.x - rect.x), rect.width) / rect.width)
+      ? 0 : Math.min(Math.max(0, e.x - rect.x), rect.width) / rect.width
+    const previewImgNumber = Math.max(
+      1,
+      Math.floor(percent * (total + 1))
+    )
+
+    previewImg.style.backgroundImage = prevImageSource;
+    previewImg.style.setProperty("--w", `${width}px`);
+    previewImg.style.setProperty("--w", `${width}px`);
+    previewImg.style.setProperty("--h", `${height}px`);
+    previewImg.style.setProperty("--p", `${previewImgNumber}`);
+    timelineContainer.style.setProperty("--preview-position", `${percent}`)
+
+    if (isScrubbing) {
+        e.preventDefault()
+        thumbnailImg.style.backgroundImage = prevImageSource;
+        thumbnailImg.style.setProperty("--w", `${width}px`);
+        thumbnailImg.style.setProperty("--w", `${width}px`);
+        thumbnailImg.style.setProperty("--h", `${height}px`);
+        thumbnailImg.style.setProperty("--p", `${previewImgNumber}`);
+        timelineContainer?.style.setProperty("--progress-position", `${percent}`)
+      }
   }
 
   return {
@@ -202,7 +267,7 @@ export function useIntersectionVideo ({ title, video }: UseIntersectionVideoProp
   }
 }
 
-export function useIntersectionImage ({ image, src, timeout }: UseIntersectionImageProps) {
+export function useIntersectionImage ({ image, timeout }: UseIntersectionImageProps) {
   const [loaded, setLoaded] = useState(false);
   const [current, setCurrent] = useState(false);
   const next = () => nextItem(image.current.parentElement as HTMLElement);
@@ -218,15 +283,7 @@ export function useIntersectionImage ({ image, src, timeout }: UseIntersectionIm
       imageEl.parentElement?.classList.toggle("current", isIntersecting);
       setCurrent(isIntersecting);
       if (isIntersecting) {
-        if (!imageEl.src) {
-          // setLoaded(false);
-          // fetch(src)
-          //   .then(res => res.blob())
-          //   .then((blob) => imageEl.src = URL.createObjectURL(blob))
-          //   .finally(() => setLoaded(true));
-          imageEl.src = src;
-          setLoaded(true);
-        }
+        setLoaded(true);
         if (preferences.autoPlay) {
           timer = setTimeout(() => {
             if (imageEl?.parentElement && imageEl.parentElement.nextElementSibling) {

@@ -4,18 +4,19 @@ import { usePreferencesContext } from '../context/preferences'
 import Loader from './loader'
 
 type VideoProps = {
-  _id: string;
-  title: string;
-  description: string;
-  video_at: string | Date;
+  videoData: Media;
   src: string;
   vtts: Record<string, string>;
-  mime: string;
   autoPlay?: boolean;
 }
-export default function Video({ _id, title, description, video_at, src, vtts, mime, autoPlay }: VideoProps) {
+export default function Video({ videoData, src, vtts, autoPlay }: VideoProps) {
   const video = useRef<HTMLVideoElement>(null) as VideoReference;
-  const { current, ...events } = useIntersectionVideo({ title, description, video_at, video, src, type: mime });
+  const videoContainer = useRef<HTMLElement>(null) as VideoReference;
+  const { current, ...events } = useIntersectionVideo({
+    video,
+    videoContainer,
+    videoData,
+  });
   const [vttsBlob, setVttsBlob] = useState<string[][]>([])
   const v = async () => {
     const blobs = await Promise.all(
@@ -83,10 +84,10 @@ export default function Video({ _id, title, description, video_at, src, vtts, mi
     }
   }
   return (
-    <article className={`video-container ${current ? 'current' : ''}`} data-volume-level="high" data-id={_id}>
+    <article ref={videoContainer} className={`video-container group ${current ? 'current' : ''}`} data-volume-level="high" data-id={videoData._id}>
       <Controls video={video} {...events} />
       <video autoPlay={autoPlay} playsInline ref={video}>
-        <source src={src} type="video/mp4" data-mime={ mime } />
+        <source src={src} type={ videoData.type.mime } />
         {vttsBlob?.map(([lang, vtt]) => (
           <track key={`vtt-${lang}`} kind="captions" srcLang={lang} src={vtt} />
         ))}
@@ -117,7 +118,7 @@ export function Controls({
   const speedBtn = useRef<HTMLButtonElement>(null); // .speed-btn
   const currentTimeElem = useRef<HTMLDivElement>(null); // .current-time
   const totalTimeElem = useRef<HTMLDivElement>(null); // .total-time
-  const previewImg = useRef<HTMLImageElement>(null); // .preview-img
+  const previewImg = useRef<HTMLDivElement>(null); // .preview-img
   const thumbnailImg = useRef<HTMLImageElement>(null); // .thumbnail-img
   const volumeSlider = useRef<HTMLInputElement>(null); // .volume-slider
   const timelineContainer = useRef<HTMLDivElement>(null); // .timeline-container
@@ -229,7 +230,7 @@ export function Controls({
       <div className="video-controls-container">
         <div className="timeline-container" ref={timelineContainer}>
           <div className="timeline">
-            <img className="preview-img" ref={previewImg} />
+            <div className="preview-img border-amber-300 border-2 w-[var(--w)] h-[var(--h)] bg-no-repeat bg-position-[calc(mod((var(--p)_-_1),_10)_*_var(--w)_*_-1)_calc(((var(--p)_-_mod(var(--p),_10))_/_10)_*_var(--h))]" style={{ '--p': '4', '--w': '120px', '--h': '67px', } as React.CSSProperties} ref={previewImg} />
             <div className="thumb-indicator"></div>
           </div>
         </div>

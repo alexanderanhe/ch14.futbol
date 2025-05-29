@@ -17,16 +17,15 @@ export default function Feed() {
     <PreferencesContextProvider>
       <Section addMedia={setMedia}>
         { media?.map((media: Media, i) => (
-          media.codec_type.includes('video')
+          media.type.mime?.startsWith('video')
           ? <VideoContainer
               key={`feed-${media._id}-${i}`}
-              {...media}
+              videoData={media}
               autoPlay={!i}
               src={`${import.meta.env.VITE_API_URL}/video/stream/${media._id}`}
-              mime={media.type}
               vtts={{ "en": `${import.meta.env.VITE_API_URL}/video/vtt/${media._id}`}}
             />
-          : <ImageContainer key={`feed-${media._id}-${i}`} {...media} src={`/api/image/${media._id}`} mime={media.type} />
+          : <ImageContainer key={`feed-${media._id}-${i}`} {...media} src={`/api/image/${media._id}`} mime={media.type.mime} />
         ))}
       </Section>
       <FeedNav />
@@ -61,7 +60,7 @@ function Section({ children, addMedia }: { children: React.ReactNode, addMedia: 
         };
         const videos = (data?.map((video: Media) => ({
           ...video,
-          created_at: new Date(video.created_at).toLocaleString(),
+          created_at: new Date(video.createdAt).toLocaleString(),
         })) ?? []) as Media[];
         setSkip(skip => skip + 10);
         addMedia((prev: Media[]) => [...prev, ...videos]);
