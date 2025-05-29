@@ -23,7 +23,8 @@ type TypeMedia = {
 };
 
 type Thumbnail = {
-  image: string;
+  collage: string;
+  images: string[];
   resolution: `${number}x${number}`;
   total: number;
 };
@@ -62,7 +63,7 @@ type Media = {
   type: TypeMedia;
   format?: FormatProps;
   stream?: StreamProps;
-  thumbnails?: Thumbnail[];
+  thumbnails?: Thumbnail;
   createdAt: Date;
   deleted?: boolean;
 }

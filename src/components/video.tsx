@@ -85,7 +85,7 @@ export default function Video({ videoData, src, vtts, autoPlay }: VideoProps) {
   }
   return (
     <article ref={videoContainer} className={`video-container group ${current ? 'current' : ''}`} data-volume-level="high" data-id={videoData._id}>
-      <Controls video={video} {...events} />
+      <Controls video={video} videoData={videoData} {...events} />
       <video autoPlay={autoPlay} playsInline ref={video}>
         <source src={src} type={ videoData.type.mime } />
         {vttsBlob?.map(([lang, vtt]) => (
@@ -99,14 +99,16 @@ export default function Video({ videoData, src, vtts, autoPlay }: VideoProps) {
 
 export function Controls({
   video,
+  videoData,
   togglePlay,
   toggleCaptions,
   toggleMute,
 }: {
   video: React.RefObject<HTMLVideoElement>,
-  togglePlay: () => void,
-  toggleCaptions: () => void,
-  toggleMute: () => void,
+  videoData: Media;
+  togglePlay: () => void;
+  toggleCaptions: () => void;
+  toggleMute: () => void;
 }) {
   const [ , dispatch] = usePreferencesContext();
   const playPauseBtn = useRef<HTMLButtonElement>(null); // .play-pause-btn
@@ -225,7 +227,7 @@ export function Controls({
   }
   return (
     <>
-      <div className="thumbnail-img" ref={thumbnailImg}></div>
+      <div className="thumbnail-img bg-no-repeat bg-contain bg-center bg-black" ref={thumbnailImg} style={{ backgroundImage: `url(data:image/jpg;base64,${videoData.thumbnails?.images[0]})`}}></div>
       <div className="absolute bottom-0 flex justify-end w-full font-monka opacity-40 hover:opacity-100 p-2">ch14</div>
       <div className="video-controls-container">
         <div className="timeline-container" ref={timelineContainer}>

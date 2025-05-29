@@ -211,14 +211,12 @@ export function useIntersectionVideo ({ video, videoContainer, videoData }: UseI
   }
 
   function handleTimelineUpdate(e: MouseEvent) {
-    console.log(thumbnails)
     if (!videoContainer.current || !thumbnails) return;
     const videoContainerEl = videoContainer.current;
     const previewImg = videoContainerEl.querySelector(".preview-img") as HTMLDivElement;
     const thumbnailImg = videoContainerEl.querySelector(".thumbnail-img") as HTMLImageElement;
     const timelineContainer = videoContainerEl.querySelector(".timeline-container") as HTMLDivElement
-    const [thumbnail] = thumbnails;
-    const { image: prevImageSource, resolution, total} = thumbnail;
+    const { collage, images, resolution, total } = thumbnails;
     const [width, height] = resolution.split('x');
 
     const rect = timelineContainer?.getBoundingClientRect()
@@ -230,7 +228,7 @@ export function useIntersectionVideo ({ video, videoContainer, videoData }: UseI
       Math.floor(percent * (total + 1))
     )
 
-    previewImg.style.backgroundImage = prevImageSource;
+    previewImg.style.backgroundImage = `url(data:image/jpg;base64,${collage})`;
     previewImg.style.setProperty("--w", `${width}px`);
     previewImg.style.setProperty("--w", `${width}px`);
     previewImg.style.setProperty("--h", `${height}px`);
@@ -239,11 +237,7 @@ export function useIntersectionVideo ({ video, videoContainer, videoData }: UseI
 
     if (isScrubbing) {
         e.preventDefault()
-        thumbnailImg.style.backgroundImage = prevImageSource;
-        thumbnailImg.style.setProperty("--w", `${width}px`);
-        thumbnailImg.style.setProperty("--w", `${width}px`);
-        thumbnailImg.style.setProperty("--h", `${height}px`);
-        thumbnailImg.style.setProperty("--p", `${previewImgNumber}`);
+        thumbnailImg.style.backgroundImage = `url(data:image/jpg;base64,${images[0]})`;
         timelineContainer?.style.setProperty("--progress-position", `${percent}`)
       }
   }
