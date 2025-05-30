@@ -121,7 +121,7 @@ export function useIntersectionVideo ({ video, videoContainer, videoData }: UseI
 
   useEffect(() => {
     if (video.current) {
-      video.current.loop = !preferences.autoPlay;
+      video.current.loop = preferences.loop;
       video.current.muted = preferences.muted;
       video.current.volume = preferences.volume;
     }
@@ -181,7 +181,7 @@ export function useIntersectionVideo ({ video, videoContainer, videoData }: UseI
     video.current.parentElement?.classList.toggle("captions", isHidden)
   }
   function handleEnded() {
-    if (preferences.autoPlay && video.current.parentElement?.nextElementSibling) {
+    if (!preferences.loop && video.current.parentElement?.nextElementSibling) {
       next();
     }
   }
@@ -278,7 +278,7 @@ export function useIntersectionImage ({ image, timeout }: UseIntersectionImagePr
       setCurrent(isIntersecting);
       if (isIntersecting) {
         setLoaded(true);
-        if (preferences.autoPlay) {
+        if (!preferences.loop) {
           timer = setTimeout(() => {
             if (imageEl?.parentElement && imageEl.parentElement.nextElementSibling) {
               next();

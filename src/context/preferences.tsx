@@ -1,14 +1,14 @@
 import { createContext, useContext, useReducer, type Dispatch, type ReactNode } from "react";
 
 interface PreferencesState {
-  autoPlay: boolean;
+  loop: boolean;
   muted: boolean;
   volume: number;
 }
 
 type PreferencesAction = 
-  | { type: "TOGGLE_AUTOPLAY" }
-  | { type: "TOGGLE_MUTED" }
+  | { type: "TOGGLE_LOOP" }
+  | { type: "TOGGLE_MUTED"; payload?: boolean; }
   | { type: "SET_VOLUME"; payload: number };
 
 interface PreferencesContextProviderProps {
@@ -16,7 +16,7 @@ interface PreferencesContextProviderProps {
 }
   
 const initialState = {
-  autoPlay: true,
+  loop: true,
   muted: true,
   volume: 1,
 };
@@ -36,27 +36,20 @@ export function PreferencesContextProvider({ children }: PreferencesContextProvi
 
 export const usePreferencesContext = () => useContext(PreferencesContext);
 
-type ReducerAction = {
-  type: 'TOGGLE_AUTOPLAY';
-} | {
-  type: 'TOGGLE_MUTED';
-} | {
-  type: 'SET_VOLUME';
-  payload: number;
-}
+type ReducerAction = PreferencesAction;
 
 interface ReducerState {
-  autoPlay: boolean;
+  loop: boolean;
   muted: boolean;
   volume: number;
 }
 
 export default function Reducer(state: ReducerState, action: ReducerAction): ReducerState {
   switch (action.type) {
-    case "TOGGLE_AUTOPLAY":
-      return { ...state, autoPlay: !state.autoPlay };
+    case "TOGGLE_LOOP":
+      return { ...state, loop: !state.loop };
     case "TOGGLE_MUTED":
-      return { ...state, muted: !state.muted };
+      return { ...state, muted: action.payload ?? !state.muted };
     case "SET_VOLUME":
       return { ...state, volume: action.payload };
     default:
