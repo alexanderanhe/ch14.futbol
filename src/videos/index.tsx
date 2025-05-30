@@ -3,16 +3,40 @@ import { PreferencesContextProvider, usePreferencesContext } from "../context/pr
 import useIntersection from "./hooks/useIntersection";
 import Loader from "./loader";
 import styles from './video.module.css';
-import useControls from "./hooks/useControls";
+import useVideoControls from "./hooks/useVideoControls";
 import type { Data } from "./types";
+import { useEffect, useRef } from "react";
+import useImageControls from "./hooks/useImageControls";
 
 type VideoContainerPorps = {
+  scrollEnd?: () => Promise<void>;
   children: React.ReactNode;
 }
-export function VideoContainer({children}: VideoContainerPorps) {
+export function VideoContainer({scrollEnd, children}: VideoContainerPorps) {
+  const sectionRef = useRef<HTMLDivElement>(null);
+
+  async function handleScrollend() {
+    if (!scrollEnd) return;
+    if (!sectionRef.current) return;
+    const scrollRest = sectionRef.current.scrollHeight - sectionRef.current.scrollTop - section.current.clientHeight;
+    if (scrollRest < 100 && sectionRef.current.dataset.loading !== "true") {
+      sectionRef.current.dataset.loading = "true";
+      await scrollEnd();
+      sectionRef.current.dataset.loading = "false";
+    }
+  }
+
+  useEffect(() => {
+    if (!sectionRef.current) return;
+    sectionRef.current?.addEventListener("scrollend", handleScrollend);
+    return () => {
+      sectionRef.current?.removeEventListener("scrollend", handleScrollend);
+    }
+  }, []);
+
   return (
     <PreferencesContextProvider>
-      <section className={`${styles.feed} no-scrollbar`}>
+      <section ref={sectionRef} className={`${styles.feed} no-scrollbar`}>
         { children }
       </section>
     </PreferencesContextProvider>
@@ -44,7 +68,7 @@ export function VideoPlayer({children, data, ...props}: VideoProps) {
     miniPlayerBtn,
     theaterBtn,
     fullScreenBtn,
-  } = useControls(videoRef, data);
+  } = useVideoControls(videoRef, current, data);
   return (
     <article
       className={classNames(styles['video-container'], 'video-container group select-none', [
@@ -131,4 +155,23 @@ export function VideoPlayer({children, data, ...props}: VideoProps) {
       <Loader />
     </article>
   );
+}
+
+type ImagePlayerProps = React.ComponentPropsWithoutRef<"img"> & {
+  data: Data;
+}
+export function ImagePlayer({data, ...props}: ImagePlayerProps) {
+  const [imageRef, current] = useIntersection({
+    root: null,
+    rootMargin: '0px',
+    threshold: 0.9
+  });
+  const { loaded } = useImageControls(imageRef, current, data)
+  return (
+    <article className={`${styles["image-container"]} ${current ? 'current' : ''} ${!loaded ? 'waiting' : ''}`}>
+      <img ref={imageRef} {...props} />
+      <div className={"controls-container"}></div>
+      <Loader />
+    </article>
+  )
 }

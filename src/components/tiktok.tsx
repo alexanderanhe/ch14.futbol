@@ -19,7 +19,6 @@ export default function Tiktok() {
             poster: `url(data:image/jpg;base64,${m.thumbnails?.images?.[0]}`,
             thumbnails: m.thumbnails,
           }}
-          autoPlay={!i}
         >
           <source src={`${VIDEO_API_URL}/${m._id}`} type={ m.type.mime } />
           {/* {Object.entries(vtts).map(([lang, vtt]) => (

@@ -1,4 +1,4 @@
-export type Data = {
+export type VideoData = {
     title?: string;
     author?: string;
     album?: string;
@@ -10,3 +10,7 @@ export type Data = {
       resolution: string;
     };
   };
+
+  export type ImageData = {
+    src: string;
+  }

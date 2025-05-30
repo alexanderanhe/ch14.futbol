@@ -1,8 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { usePreferencesContext } from '../../context/preferences';
-import type { Data } from '../types';
+import type { VideoData } from '../types';
 
-function useControls(videoRef: React.RefObject<HTMLVideoElement>, data: Data) {
+export default function useVideoControls(
+  videoRef: React.RefObject<HTMLVideoElement>,
+  isIntersecting: boolean,
+  data: VideoData,
+) {
   const playPauseBtn = useRef<HTMLButtonElement>(null); // .play-pause-btn
   const theaterBtn = useRef<HTMLButtonElement>(null); // .theater-btn
   const fullScreenBtn = useRef<HTMLButtonElement>(null); // .full-screen-btn
@@ -142,7 +146,7 @@ function useControls(videoRef: React.RefObject<HTMLVideoElement>, data: Data) {
     const [width, height] = resolution.split('x');
 
     const rect = timelineContainer?.getBoundingClientRect()
-    if (!rect || !videoRef.current) return;
+    if (!rect || !videoEl) return;
     const percent = isNaN(Math.min(Math.max(0, e.x - rect.x), rect.width) / rect.width)
       ? 0 : Math.min(Math.max(0, e.x - rect.x), rect.width) / rect.width
     const previewImgNumber = Math.max(
@@ -283,6 +287,13 @@ function useControls(videoRef: React.RefObject<HTMLVideoElement>, data: Data) {
   }, []);
 
   useEffect(() => {
+    if (isIntersecting) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play()
+    } else videoRef.current.pause()
+  }, [isIntersecting])
+
+  useEffect(() => {
     if (videoRef.current) {
       videoRef.current.loop = preferences.loop;
       videoRef.current.muted = preferences.muted;
@@ -306,8 +317,6 @@ function useControls(videoRef: React.RefObject<HTMLVideoElement>, data: Data) {
     timelineContainer,
   }
 }
-
-export default useControls
 
 // function prevItem (item: HTMLElement) {
 //   const next = item.previousElementSibling as HTMLElement

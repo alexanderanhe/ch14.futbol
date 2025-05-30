@@ -1,11 +1,8 @@
-import { Suspense } from 'react';
-import Feed from '../components/feed';
-import Loader from '../components/loader';
-
 export default function HomePage() {
   return (
-    <Suspense fallback={<Loader />}>
-      <Feed />
-    </Suspense>
+    <>
+      <h1>Hello world</h1>
+      <p>Contact to: <a href="mailto:alex.anguloh@gmail.com">[here]</a></p>
+    </>
   )
 }
