@@ -7,6 +7,7 @@ export default function Tiktok() {
   const data = use(fetchData('/video?')) as Media[];
   const [media] = useState<Media[]>(data);
   const VIDEO_API_URL = `${import.meta.env.VITE_API_URL}/video/stream`;
+  const TRACK_API_URL = `${import.meta.env.VITE_API_URL}/video/vtt`;
   if (data.length === 0) {
     return (<p>No hay videos</p>);
   }
@@ -20,10 +21,10 @@ export default function Tiktok() {
             thumbnails: m.thumbnails,
           }}
         >
-          <source src={`${VIDEO_API_URL}/${m._id}`} type={ m.type.mime } />
-          {/* {Object.entries(vtts).map(([lang, vtt]) => (
-            <track key={`vtt-${lang}`} kind="captions" srcLang={lang} src={vtt} />
-          ))} */}
+          <source data-src={`${VIDEO_API_URL}/${m._id}`} type={ m.type.mime } />
+          {Object.entries({ "en": `${TRACK_API_URL}/${m._id}`}).map(([lang, vtt]) => (
+            <track key={`vtt-${lang}`} kind="captions" srcLang={lang} data-src={vtt} />
+          ))}
         </VideoPlayer>
       ))}
       <FeedNav />

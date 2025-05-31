@@ -328,6 +328,10 @@ body:has(section article.current:hover) .nav,
   opacity: 1;
 }
 
+@media only screen and (max-width: 600px) {
+  .nav {opacity: 1;}
+}
+
 .nav button {
   appearance: none;
   background-color: #000000;
@@ -371,13 +375,6 @@ body:has(section article.current:hover) .nav,
 .nav button:active {
   box-shadow: none;
   transform: translateY(0);
-}
-
-.nav button svg {
-  /* background-color: transparent; */
-  width: 1rem;
-  color: #fff;
-  aspect-ratio: 1/1;
 }
 
 body:has(section article:first-child.current) .nav button#up {

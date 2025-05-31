@@ -1,23 +1,44 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { usePreferencesContext } from "../context/preferences";
 import { nextItem, prevItem } from "../hooks/useIntersectionObserver";
-import { ArrowPathIcon } from '@heroicons/react/24/solid';
+import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
+import { ChevronUpIcon, ChevronDownIcon, ArrowPathIcon, HeartIcon } from '@heroicons/react/24/outline';
 
 export default function FeedNav() {
   const [ { loop }, dispatch] = usePreferencesContext();
+  const [like, setLike] = useState<boolean>(false);
   const nav = useRef<HTMLDivElement>(null); // .nav
   const buttonUp = useRef<HTMLButtonElement>(null); // .nav button#up
   const buttonDown = useRef<HTMLButtonElement>(null); // .nav button#down
   const buttonLike = useRef<HTMLButtonElement>(null); // .nav button#like
-  const buttonCollage = useRef<HTMLButtonElement>(null); // .nav button#collage
   const buttonScrollDown = useRef<HTMLButtonElement>(null); // .nav button#scroll-down
-  const buttonNew = useRef<HTMLButtonElement>(null); // .nav button#new
+  // const buttonCollage = useRef<HTMLButtonElement>(null); // .nav button#collage
+  // const buttonNew = useRef<HTMLButtonElement>(null); // .nav button#new
+
+  const fetchSimulate = async (like: boolean) => {
+    try {
+      buttonLike.current?.classList.add("disabled");
+      const d = await new Promise((resolve, reject) => {
+        setTimeout(() => Math.floor(Math.random() * 10) < 8 ? reject() : resolve(like), 500);
+      });
+      console.log("BIEN", d);
+    } catch {
+      console.log("MAL");
+      setLike(like => !like);
+    } finally {
+      buttonLike.current?.classList.remove("disabled");
+    }
+  }
 
   useEffect(() => {
     buttonUp.current?.addEventListener("click", prev);
     buttonDown.current?.addEventListener("click", next);
+    buttonLike.current?.addEventListener("click", handleLike);
     buttonScrollDown.current?.addEventListener("click", handleAutoPlay);
     return () => {
+      buttonUp.current?.removeEventListener("click", prev);
+      buttonDown.current?.removeEventListener("click", next);
+      buttonLike.current?.removeEventListener("click", handleLike);
       buttonScrollDown.current?.removeEventListener("click", handleAutoPlay);
     }
   }, [])
@@ -33,32 +54,35 @@ export default function FeedNav() {
   function handleAutoPlay() {
     dispatch({ type: "TOGGLE_LOOP" });
   }
+  function handleLike() {
+    console.log("SET LIKE", like)
+    setLike(like => !like);
+    fetchSimulate(like);
+  }
 
   return (
     <div className="nav" ref={nav}>
       <button id="up" ref={buttonUp}>
-        <svg viewBox="0 0 1024 1024" className="icon"  version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M903.232 768l56.768-50.432L512 256l-448 461.568 56.768 50.432L512 364.928z" fill="currentColor" /></svg>
+        <ChevronUpIcon className="size-4" />
       </button>
       <button id="down" ref={buttonDown}>
-        <svg viewBox="0 0 1024 1024" className="icon"  version="1.1" xmlns="http://www.w3.org/2000/svg"><path d="M903.232 256l56.768 50.432L512 768 64 306.432 120.768 256 512 659.072z" fill="currentColor" /></svg>
+        <ChevronDownIcon className="size-4" />
       </button>
       <button id="like" ref={buttonLike}>
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M15.7 4C18.87 4 21 6.98 21 9.76C21 15.39 12.16 20 12 20C11.84 20 3 15.39 3 9.76C3 6.98 5.13 4 8.3 4C10.12 4 11.31 4.91 12 5.71C12.69 4.91 13.88 4 15.7 4Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
+        {like ? <HeartIconSolid className="size-4" /> : <HeartIcon className="size-4" />}
       </button>
       <button id="scroll-down" ref={buttonScrollDown}>
-        { loop ? (
+        { !loop ? (
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M5 15C5 16.8565 5.73754 18.6371 7.05029 19.9498C8.36305 21.2626 10.1435 21.9999 12 21.9999C13.8565 21.9999 15.637 21.2626 16.9498 19.9498C18.2625 18.6371 19 16.8565 19 15V9C19 7.14348 18.2625 5.36305 16.9498 4.05029C15.637 2.73754 13.8565 2 12 2C10.1435 2 8.36305 2.73754 7.05029 4.05029C5.73754 5.36305 5 7.14348 5 9V15Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M12 6V14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M15 11L12 14L9 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         ) : (
-          <ArrowPathIcon className="size-7" />
+          <ArrowPathIcon className="size-4" />
         )}
       </button>
-      <button id="collage" ref={buttonCollage}>
+      {/* <button id="collage" ref={buttonCollage}>
         <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" 
             viewBox="0 0 20.954 20.954">
           <g>
@@ -91,8 +115,8 @@ export default function FeedNav() {
             </g>
           </g>
         </svg>
-      </button>
-      <button id="new" ref={buttonNew}>
+      </button> */}
+      {/* <button id="new" ref={buttonNew}>
         <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
           <rect fill="currentColor" fillOpacity="0.01"/>
           <path d="M11.6777 20.271C7.27476 21.3181 4 25.2766 4 30C4 35.5228 8.47715 40 14 40C14.9474 40 15.864 39.8683 16.7325 39.6221" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
@@ -101,7 +125,7 @@ export default function FeedNav() {
           <path d="M17.0654 27.881L23.9999 20.9236L31.1318 28" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
           <path d="M24 38V24.4618" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
-      </button>
+      </button> */}
     </div>
   )
 }

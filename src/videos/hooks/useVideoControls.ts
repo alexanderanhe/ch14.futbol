@@ -22,6 +22,7 @@ export default function useVideoControls(
   const timelineContainer = useRef<HTMLDivElement>(null); // .timeline-container
   
   const [preferences, dispatch] = usePreferencesContext();
+  const [lazy, setLazy] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [fullscreen, setFullscreen] = useState<boolean>(false);
   const [isScrubbing, setIsScrubbing] = useState<boolean>(false);
@@ -34,17 +35,19 @@ export default function useVideoControls(
   // Play / pause actions
   const eventListenerPlay = () => {
     videoRef.current.parentElement?.classList.remove("paused");
+    setIsPlaying(true);
   }
   const eventListenerPause = () => {
     videoRef.current.parentElement?.classList.add("paused");
     videoRef.current.parentElement?.classList.toggle("waiting", false);
+    setIsPlaying(false);
   }
   const togglePlay = () => {
     const { current: videoEl } = videoRef
-    console.log("CLICK", isPlaying);
     setIsPlaying((playing) => {
+      console.log({isPlaying, playing})
       if (playing) { videoEl.pause() } else videoEl.play();
-      return !playing;
+      return playing;
     })
   };
   const toggleWaiting = () => {
@@ -119,9 +122,8 @@ export default function useVideoControls(
   const toggleScrubbing = (e: MouseEvent) => {
     const videoEl = videoRef.current as HTMLVideoElement;
     const videoContainer = videoEl?.parentElement;
-    const timelineContainer = videoContainer?.querySelector(".timeline-container") as HTMLDivElement
 
-    const rect = timelineContainer?.getBoundingClientRect()
+    const rect = timelineContainer.current?.getBoundingClientRect()
     if (!rect || !videoEl) return;
     const percent = Math.min(Math.max(0, e.x - rect.x), rect.width) / rect.width
     setIsScrubbing((e.buttons & 1) === 1)
@@ -139,13 +141,10 @@ export default function useVideoControls(
     const videoEl = videoRef.current as HTMLVideoElement;
     const videoContainer = videoEl?.parentElement;
     if (!videoContainer || !data.thumbnails) return;
-    const previewImg = videoContainer.querySelector(".preview-img") as HTMLDivElement;
-    const thumbnailImg = videoContainer.querySelector(".thumbnail-img") as HTMLImageElement;
-    const timelineContainer = videoContainer.querySelector(".timeline-container") as HTMLDivElement
     const { collage, images, resolution, total } = data.thumbnails;
     const [width, height] = resolution.split('x');
 
-    const rect = timelineContainer?.getBoundingClientRect()
+    const rect = timelineContainer.current?.getBoundingClientRect()
     if (!rect || !videoEl) return;
     const percent = isNaN(Math.min(Math.max(0, e.x - rect.x), rect.width) / rect.width)
       ? 0 : Math.min(Math.max(0, e.x - rect.x), rect.width) / rect.width
@@ -153,18 +152,19 @@ export default function useVideoControls(
       1,
       Math.floor(percent * (total + 1))
     )
+    if (!previewImg.current) return;
+    const previewImgEl = previewImg.current;
+    previewImgEl.style.backgroundImage = `url(data:image/jpg;base64,${collage})`;
+    previewImgEl.style.setProperty("--w", `${width}px`);
+    previewImgEl.style.setProperty("--w", `${width}px`);
+    previewImgEl.style.setProperty("--h", `${height}px`);
+    previewImgEl.style.setProperty("--p", `${previewImgNumber}`);
+    timelineContainer.current?.style.setProperty("--preview-position", `${percent}`)
 
-    previewImg.style.backgroundImage = `url(data:image/jpg;base64,${collage})`;
-    previewImg.style.setProperty("--w", `${width}px`);
-    previewImg.style.setProperty("--w", `${width}px`);
-    previewImg.style.setProperty("--h", `${height}px`);
-    previewImg.style.setProperty("--p", `${previewImgNumber}`);
-    timelineContainer.style.setProperty("--preview-position", `${percent}`)
-
-    if (isScrubbing) {
+    if (isScrubbing && thumbnailImg.current) {
       e.preventDefault()
-      thumbnailImg.style.backgroundImage = `url(data:image/jpg;base64,${images[0]})`;
-      timelineContainer?.style.setProperty("--progress-position", `${percent}`)
+      thumbnailImg.current.style.backgroundImage = `url(data:image/jpg;base64,${images[0]})`;
+      timelineContainer.current?.style.setProperty("--progress-position", `${percent}`)
     }
   }
 
@@ -194,22 +194,28 @@ export default function useVideoControls(
   const handleFullScreenChange = () => {
     setFullscreen(!!document.fullscreenElement);
   }
+  const handleVideoLoaded = () => {
+    if (!videoRef.current) return
+    const videoEl = videoRef.current;
+    if (videoEl.duration && totalTimeElem.current) {
+      totalTimeElem.current.textContent = formatDuration(videoEl?.duration ?? 0);
+    }
+    if (!videoEl.textTracks.length && captionsBtn.current) {
+      captionsBtn.current.style.display = "none";
+    }
+    if (videoEl.textTracks.length) {
+      const captions = videoEl.textTracks[0];
+      captions.mode = "hidden";
+    }
+  }
+  const handleDblclick = () => {
+    console.log("LIKE");
+  }
 
   useEffect(() => {
     if (!videoRef.current) return
     const videoEl = videoRef.current;
     const videoContainer = videoEl?.parentElement;
-
-    if (!videoRef.current?.textTracks.length && captionsBtn.current) {
-      captionsBtn.current.style.display = "none";
-    }
-    if (videoRef.current?.duration && totalTimeElem.current) {
-      totalTimeElem.current.textContent = formatDuration(videoRef.current?.duration ?? 0);
-    }
-    if (videoRef.current?.textTracks.length) {
-      const captions = videoRef.current.textTracks[0];
-      captions.mode = "hidden";
-    }
 
     // playing
     videoEl.addEventListener("click", togglePlay, true);
@@ -242,6 +248,8 @@ export default function useVideoControls(
     videoEl.addEventListener("fullscreenchange", toggleFullscreenChange, true);
     videoEl.addEventListener("enterpictureinpicture", togglePictureInPicture, true);
     videoEl.addEventListener("leavepictureinpicture", togglePictureInPicture, true);
+    videoEl.addEventListener("loadeddata", handleVideoLoaded);
+    videoEl.addEventListener("dblclick", handleDblclick);
 
     // document
     document.addEventListener("fullscreenchange", handleFullScreenChange);
@@ -279,6 +287,8 @@ export default function useVideoControls(
       videoEl.removeEventListener("fullscreenchange", toggleFullscreenChange, true);
       videoEl.removeEventListener("enterpictureinpicture", togglePictureInPicture, true);
       videoEl.removeEventListener("leavepictureinpicture", togglePictureInPicture, true);
+      videoEl.removeEventListener("loadeddata", handleVideoLoaded);
+      videoEl.removeEventListener("dblclick", handleDblclick);
 
       // document
       document.removeEventListener("fullscreenchange", handleFullScreenChange);
@@ -286,19 +296,43 @@ export default function useVideoControls(
     }
   }, []);
 
+  const fetchTracks = async (target: HTMLTrackElement) => {
+    const src = target.dataset.src ?? target.src;
+    const req = await fetch(src);
+    const content = await req.text();
+    const blob = URL.createObjectURL(
+      new Blob([content], { type: "text/vtt", endings: 'native',})
+    );
+    target.src = blob;
+  }
+
   useEffect(() => {
+    if (!videoRef.current) return
+    const videoEl = videoRef.current;
     if (isIntersecting) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.play()
-    } else videoRef.current.pause()
+      if (!lazy) {
+        for (const child in videoEl.children) {
+          const videoChild = videoEl.children[child] as HTMLSourceElement | HTMLTrackElement;
+          if (typeof videoChild.tagName === 'string' && videoChild.tagName === 'SOURCE') {
+            videoChild.src = `${videoChild.dataset.src}`;
+          } else if (typeof videoChild.tagName === 'string' && videoChild.tagName === 'TRACK') {
+            fetchTracks(videoChild as HTMLTrackElement);
+          }
+        }
+        setLazy(false);
+        videoEl.load();
+      }
+      videoEl.currentTime = 0;
+      videoEl.play();
+    } else videoEl.pause()
   }, [isIntersecting])
 
   useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.loop = preferences.loop;
-      videoRef.current.muted = preferences.muted;
-      videoRef.current.volume = preferences.volume;
-    }
+    if (!videoRef.current) return
+    const videoEl = videoRef.current;
+    videoEl.loop = preferences.loop;
+    videoEl.muted = preferences.muted;
+    videoEl.volume = preferences.volume;
   }, [videoRef, preferences]);
 
   return {
