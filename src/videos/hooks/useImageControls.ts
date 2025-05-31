@@ -7,6 +7,9 @@ export default function useImageControls(
 ) {
   const [loaded] = useState<boolean>(false);
   return {
-    loaded
+    loaded,
+    imageRef,
+    isIntersecting,
+    data,
   }
 }

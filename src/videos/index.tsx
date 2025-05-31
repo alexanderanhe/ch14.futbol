@@ -4,9 +4,9 @@ import useIntersection from "./hooks/useIntersection";
 import Loader from "./loader";
 import styles from './video.module.css';
 import useVideoControls from "./hooks/useVideoControls";
-import type { Data } from "./types";
 import { useEffect, useRef } from "react";
 import useImageControls from "./hooks/useImageControls";
+import type { ImageData, VideoData } from "./types";
 
 type VideoContainerPorps = {
   scrollEnd?: () => Promise<void>;
@@ -44,12 +44,12 @@ export function VideoContainer({scrollEnd, children}: VideoContainerPorps) {
 }
 
 type VideoProps = React.ComponentPropsWithoutRef<"video"> & {
-  data: Data;
+  data: VideoData;
   children?: React.ReactNode;
 }
 export function VideoPlayer({children, data, ...props}: VideoProps) {
   const [preferences] = usePreferencesContext();
-  const [videoRef, current] = useIntersection({
+  const {elementRef: videoRef, isIntersecting: current} = useIntersection({
     root: null,
     rootMargin: '0px',
     threshold: 0.9
@@ -68,7 +68,11 @@ export function VideoPlayer({children, data, ...props}: VideoProps) {
     miniPlayerBtn,
     theaterBtn,
     fullScreenBtn,
-  } = useVideoControls(videoRef, current, data);
+  } = useVideoControls(
+    videoRef as React.RefObject<HTMLVideoElement>,
+    current,
+    data
+  );
   return (
     <article
       className={classNames(styles['video-container'], 'video-container group select-none', [
@@ -151,25 +155,29 @@ export function VideoPlayer({children, data, ...props}: VideoProps) {
           </button>
         </div>
       </div>
-      <video playsInline ref={videoRef} {...props}>{children}</video>
+      <video playsInline ref={videoRef as React.RefObject<HTMLVideoElement>} {...props}>{children}</video>
       <Loader />
     </article>
   );
 }
 
 type ImagePlayerProps = React.ComponentPropsWithoutRef<"img"> & {
-  data: Data;
+  data: ImageData;
 }
 export function ImagePlayer({data, ...props}: ImagePlayerProps) {
-  const [imageRef, current] = useIntersection({
+  const {elementRef: imageRef, isIntersecting: current} = useIntersection({
     root: null,
     rootMargin: '0px',
     threshold: 0.9
   });
-  const { loaded } = useImageControls(imageRef, current, data)
+  const { loaded } = useImageControls(
+    imageRef as React.RefObject<HTMLImageElement>,
+    current,
+    data
+  )
   return (
     <article className={`${styles["image-container"]} ${current ? 'current' : ''} ${!loaded ? 'waiting' : ''}`}>
-      <img ref={imageRef} {...props} />
+      <img ref={imageRef as React.RefObject<HTMLImageElement>} {...props} />
       <div className={"controls-container"}></div>
       <Loader />
     </article>

@@ -20,5 +20,5 @@ export default function useIntersection(options: IntersectionObserverInit) {
     }
   }, []);
 
-  return [elementRef, isIntersecting];
+  return {elementRef, isIntersecting};
 }
