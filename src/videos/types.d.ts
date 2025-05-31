@@ -13,4 +13,5 @@ export type VideoData = {
 
   export type ImageData = {
     src: string;
+    alt: string;
   }

@@ -1,4 +1,5 @@
 import { useState } from "react"
+import type { ImageData } from "../types";
 
 export default function useImageControls(
   imageRef: React.RefObject<HTMLImageElement>,

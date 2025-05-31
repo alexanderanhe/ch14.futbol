@@ -18,7 +18,7 @@ export function VideoContainer({scrollEnd, children}: VideoContainerPorps) {
   async function handleScrollend() {
     if (!scrollEnd) return;
     if (!sectionRef.current) return;
-    const scrollRest = sectionRef.current.scrollHeight - sectionRef.current.scrollTop - section.current.clientHeight;
+    const scrollRest = sectionRef.current.scrollHeight - sectionRef.current.scrollTop - sectionRef.current.clientHeight;
     if (scrollRest < 100 && sectionRef.current.dataset.loading !== "true") {
       sectionRef.current.dataset.loading = "true";
       await scrollEnd();
