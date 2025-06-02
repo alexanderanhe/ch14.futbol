@@ -24,8 +24,8 @@ interface PreferencesContextProviderProps {
   
 const initialState = {
   loop: true,
-  muted: true,
-  volume: 1,
+  muted: false,
+  volume: 0.8,
   config: {
     panel_exist: false,
     panel: false,
