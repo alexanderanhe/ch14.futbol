@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { usePreferencesContext } from '../context/preferences'
+import { usePreferencesContext } from '../tik-player/context/preferences'
 
 type UseIntersectionVideoProps = {
   video: VideoReference;

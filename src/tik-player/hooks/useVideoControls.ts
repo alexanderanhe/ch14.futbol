@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react'
-import { usePreferencesContext } from '../../context/preferences';
+import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { usePreferencesContext } from '../context/preferences';
 import type { VideoData } from '../types';
 
 export default function useVideoControls(
@@ -25,8 +25,8 @@ export default function useVideoControls(
   const [lazy, setLazy] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [fullscreen, setFullscreen] = useState<boolean>(false);
-  const [isScrubbing, setIsScrubbing] = useState<boolean>(false);
-  const [wasPaused, setWasPaused] = useState<boolean>(false);
+  let isScrubbing = false;
+  let wasPaused = false;
 
   // Movement actions
   const next = () => nextItem(videoRef.current.parentElement as HTMLElement);
@@ -44,11 +44,7 @@ export default function useVideoControls(
   }
   const togglePlay = () => {
     const { current: videoEl } = videoRef
-    setIsPlaying((playing) => {
-      console.log({isPlaying, playing})
-      if (playing) { videoEl.pause() } else videoEl.play();
-      return playing;
-    })
+    if (!videoEl.paused) { videoEl.pause() } else videoEl.play();
   };
   const toggleWaiting = () => {
     videoRef.current.parentElement?.classList
@@ -96,12 +92,13 @@ export default function useVideoControls(
     // videoRef.current.muted = !videoRef.current.muted
     dispatch({ type: "TOGGLE_MUTED" })
   }
-  function handleEnded() {
+  const handleEnded = useCallback(() => {
     if (!preferences.loop
         && videoRef.current.parentElement?.nextElementSibling) {
       if (!fullscreen) next();
     }
-  }
+    console.log({loop: preferences.loop, fullscreen})
+  }, [preferences.loop])
 
   // buttons controls
   const handlePlaybackSpeed = () => {
@@ -126,10 +123,10 @@ export default function useVideoControls(
     const rect = timelineContainer.current?.getBoundingClientRect()
     if (!rect || !videoEl) return;
     const percent = Math.min(Math.max(0, e.x - rect.x), rect.width) / rect.width
-    setIsScrubbing((e.buttons & 1) === 1)
+    isScrubbing = (e.buttons & 1) === 1;
     videoContainer?.classList.toggle("scrubbing", isScrubbing)
     if (isScrubbing) {
-      setWasPaused(videoEl?.paused);
+      wasPaused = videoEl?.paused;
       videoEl.pause()
     } else {
       videoEl.currentTime = percent * videoRef.current?.duration
@@ -141,7 +138,7 @@ export default function useVideoControls(
     const videoEl = videoRef.current as HTMLVideoElement;
     const videoContainer = videoEl?.parentElement;
     if (!videoContainer || !data.thumbnails) return;
-    const { collage, images, resolution, total } = data.thumbnails;
+    const { resolution, total } = data.thumbnails;
     const [width, height] = resolution.split('x');
 
     const rect = timelineContainer.current?.getBoundingClientRect()
@@ -154,7 +151,6 @@ export default function useVideoControls(
     )
     if (!previewImg.current) return;
     const previewImgEl = previewImg.current;
-    previewImgEl.style.backgroundImage = `url(data:image/jpg;base64,${collage})`;
     previewImgEl.style.setProperty("--w", `${width}px`);
     previewImgEl.style.setProperty("--w", `${width}px`);
     previewImgEl.style.setProperty("--h", `${height}px`);
@@ -162,8 +158,12 @@ export default function useVideoControls(
     timelineContainer.current?.style.setProperty("--preview-position", `${percent}`)
 
     if (isScrubbing && thumbnailImg.current) {
+      const thumbnailImgEl = thumbnailImg.current;
       e.preventDefault()
-      thumbnailImg.current.style.backgroundImage = `url(data:image/jpg;base64,${images[0]})`;
+      thumbnailImgEl.style.setProperty("--w", `${width}px`);
+      thumbnailImgEl.style.setProperty("--w", `${width}px`);
+      thumbnailImgEl.style.setProperty("--h", `${height}px`);
+      thumbnailImgEl.style.setProperty("--p", `${previewImgNumber}`);
       timelineContainer.current?.style.setProperty("--progress-position", `${percent}`)
     }
   }
@@ -209,7 +209,7 @@ export default function useVideoControls(
     }
   }
   const handleDblclick = () => {
-    console.log("LIKE");
+    console.log("DOUBLE CLICK");
   }
 
   useEffect(() => {
@@ -294,7 +294,7 @@ export default function useVideoControls(
       document.removeEventListener("fullscreenchange", handleFullScreenChange);
       // document.removeEventListener("keydown", handleKeyDown);
     }
-  }, []);
+  }, [handleEnded]);
 
   const fetchTracks = async (target: HTMLTrackElement) => {
     const src = target.dataset.src ?? target.src;
@@ -319,7 +319,7 @@ export default function useVideoControls(
             fetchTracks(videoChild as HTMLTrackElement);
           }
         }
-        setLazy(false);
+        setLazy(true);
         videoEl.load();
       }
       videoEl.currentTime = 0;
@@ -335,6 +335,12 @@ export default function useVideoControls(
     videoEl.volume = preferences.volume;
   }, [videoRef, preferences]);
 
+  useEffect(() => {
+    if (!videoRef.current) return
+    const videoEl = videoRef.current;
+    videoEl.poster = data.poster ?? '';
+  }, [])
+
   return {
     playPauseBtn,
     theaterBtn,
@@ -349,6 +355,7 @@ export default function useVideoControls(
     thumbnailImg,
     volumeSlider,
     timelineContainer,
+    isPlaying
   }
 }
 

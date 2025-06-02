@@ -1,12 +1,15 @@
 import { Suspense } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 import Loader from "../components/loader";
-import Tiktok from "../components/tiktok";
+import Video from "../components/video";
 
 export default function VideoPage() {
   
   return (
-    <Suspense fallback={<Loader />}>
-      <Tiktok />
-    </Suspense>
+    <ErrorBoundary fallback={<p>⚠️Something went wrong</p>}>
+      <Suspense fallback={<Loader />}>
+        <Video />
+      </Suspense>
+    </ErrorBoundary>
   )
 }

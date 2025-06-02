@@ -1,8 +1,8 @@
 import classNames from "classnames";
-import { PreferencesContextProvider, usePreferencesContext } from "../context/preferences";
+import { PreferencesContextProvider, usePreferencesContext } from "./context/preferences";
 import useIntersection from "./hooks/useIntersection";
 import Loader from "./loader";
-import styles from './video.module.css';
+import styles from './styles.module.css';
 import useVideoControls from "./hooks/useVideoControls";
 import { useEffect, useRef } from "react";
 import useImageControls from "./hooks/useImageControls";
@@ -11,8 +11,9 @@ import type { ImageData, VideoData } from "./types";
 type VideoContainerPorps = {
   scrollEnd?: () => Promise<void>;
   children: React.ReactNode;
+  panel?: React.ReactNode;
 }
-export function VideoContainer({scrollEnd, children}: VideoContainerPorps) {
+export function VideoContainer({scrollEnd, panel, children}: VideoContainerPorps) {
   const sectionRef = useRef<HTMLDivElement>(null);
 
   async function handleScrollend() {
@@ -36,18 +37,36 @@ export function VideoContainer({scrollEnd, children}: VideoContainerPorps) {
 
   return (
     <PreferencesContextProvider>
-      <section ref={sectionRef} className={`${styles.feed} no-scrollbar`}>
-        { children }
-      </section>
+      <div className={styles.main}>
+        <section ref={sectionRef} className={`${styles.feed} ${styles['no-scrollbar']}`}>
+          { children }
+        </section>
+        {panel ? <Panel>{panel}</Panel> : null}
+      </div>
     </PreferencesContextProvider>
+  )
+}
+
+function Panel({children}: {children: React.ReactNode; }) {
+  const [{config}, dispatch] = usePreferencesContext();
+  useEffect(() => {
+    if (!config.panel_exist)
+      dispatch({ type: "SET_CONFIG", payload: { panel_exist: true }});
+  }, [config])
+  if (!config.panel) return;
+  return (
+    <div className={`${styles.panel} ${styles['no-scrollbar']}`}>
+      {children}
+    </div>
   )
 }
 
 type VideoProps = React.ComponentPropsWithoutRef<"video"> & {
   data: VideoData;
+  watermark?: React.ReactNode;
   children?: React.ReactNode;
 }
-export function VideoPlayer({children, data, ...props}: VideoProps) {
+export function VideoPlayer({children, data, watermark, ...props}: VideoProps) {
   const [preferences] = usePreferencesContext();
   const {elementRef: videoRef, isIntersecting: current} = useIntersection({
     root: null,
@@ -73,6 +92,9 @@ export function VideoPlayer({children, data, ...props}: VideoProps) {
     current,
     data
   );
+  // if (current) {
+  //   dispatch({ type: 'SET_CURRENT_VIDEO', payload: videoRef.current?.parentElement})
+  // }
   return (
     <article
       className={classNames(styles['video-container'], 'video-container group select-none', [
@@ -80,17 +102,16 @@ export function VideoPlayer({children, data, ...props}: VideoProps) {
       ])}
       data-volume-level="high"
     >
-      <div
-        className="thumbnail-img bg-no-repeat bg-contain bg-center bg-black"
+      <div className="thumbnail-img w-[var(--w)] h-[var(--h)] bg-no-repeat bg-position-[calc(mod((var(--p)_-_1),_10)_*_var(--w)_*_-1)_calc(((var(--p)_-_mod(var(--p),_10))_/_10)_*_var(--h))]"
+        style={{ '--p': '4', '--w': '120px', '--h': '67px', backgroundImage: `url(data:image/jpg;base64,${data.thumbnails?.collage})`} as React.CSSProperties}
         ref={thumbnailImg}
-        style={{ backgroundImage: props.poster}}
-      ></div>
-      <div className="absolute bottom-0 flex justify-end w-full font-monka opacity-40 hover:opacity-100 p-2">ch14</div>
+      />
+      <div className="absolute bottom-0 flex justify-end w-full opacity-40 hover:opacity-100 p-2">{watermark}</div>
       <div className="video-controls-container">
         <div className="timeline-container" ref={timelineContainer}>
           <div className="timeline">
-            <div className="preview-img border-amber-300 border-2 w-[var(--w)] h-[var(--h)] bg-no-repeat bg-position-[calc(mod((var(--p)_-_1),_10)_*_var(--w)_*_-1)_calc(((var(--p)_-_mod(var(--p),_10))_/_10)_*_var(--h))]"
-              style={{ '--p': '4', '--w': '120px', '--h': '67px', } as React.CSSProperties}
+            <div className="preview-img w-[var(--w)] h-[var(--h)] bg-no-repeat bg-position-[calc(mod((var(--p)_-_1),_10)_*_var(--w)_*_-1)_calc(((var(--p)_-_mod(var(--p),_10))_/_10)_*_var(--h))]"
+              style={{ '--p': '4', '--w': '120px', '--h': '67px', backgroundImage: `url(data:image/jpg;base64,${data.thumbnails?.collage})`} as React.CSSProperties}
               ref={previewImg}
             />
             <div className="thumb-indicator"></div>
@@ -182,4 +203,25 @@ export function ImagePlayer({data, ...props}: ImagePlayerProps) {
       <Loader />
     </article>
   )
+}
+
+export const prevItem = (item: HTMLElement) => {
+  const next = item.previousElementSibling as HTMLElement
+  if (next) {
+    const top = next.offsetTop;
+    (item.parentElement  as HTMLElement).scrollTo({ top: top, behavior:"smooth" });
+  }
+}
+export const nextItem = (item: HTMLElement) => {
+  const next = item.nextElementSibling as HTMLElement
+  if (next) {
+    const top = next.offsetTop;
+    (item.parentElement  as HTMLElement).scrollTo({ top: top, behavior:"smooth" });
+  }
+}
+export const goItem = (itemVideo: HTMLElement) => {
+  const item = itemVideo.parentElement as HTMLElement;
+  if (!item) return;
+  const top = item.offsetTop;
+  (item.parentElement  as HTMLElement).scrollTo({ top: top, behavior:"smooth" });
 }

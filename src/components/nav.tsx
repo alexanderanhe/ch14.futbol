@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react"
-import { usePreferencesContext } from "../context/preferences";
+import { usePreferencesContext } from "../tik-player/context/preferences";
 import { nextItem, prevItem } from "../hooks/useIntersectionObserver";
-import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
-import { ChevronUpIcon, ChevronDownIcon, ArrowPathIcon, HeartIcon } from '@heroicons/react/24/outline';
+import { ChevronDoubleLeftIcon, ChevronDoubleRightIcon, HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
+import { ChevronUpIcon, ChevronDownIcon, ArrowPathIcon, ArrowLongDownIcon, HeartIcon } from '@heroicons/react/24/outline';
 
 export default function FeedNav() {
-  const [ { loop }, dispatch] = usePreferencesContext();
+  const [ { loop, config }, dispatch] = usePreferencesContext();
   const [like, setLike] = useState<boolean>(false);
   const nav = useRef<HTMLDivElement>(null); // .nav
   const buttonUp = useRef<HTMLButtonElement>(null); // .nav button#up
@@ -14,7 +14,8 @@ export default function FeedNav() {
   const buttonScrollDown = useRef<HTMLButtonElement>(null); // .nav button#scroll-down
   // const buttonCollage = useRef<HTMLButtonElement>(null); // .nav button#collage
   // const buttonNew = useRef<HTMLButtonElement>(null); // .nav button#new
-
+  const colapsePanel = useRef<HTMLButtonElement>(null); // .nav button#scroll-down
+  
   const fetchSimulate = async (like: boolean) => {
     try {
       buttonLike.current?.classList.add("disabled");
@@ -35,11 +36,13 @@ export default function FeedNav() {
     buttonDown.current?.addEventListener("click", next);
     buttonLike.current?.addEventListener("click", handleLike);
     buttonScrollDown.current?.addEventListener("click", handleAutoPlay);
+    colapsePanel.current?.addEventListener("click", handleColapsePanel);
     return () => {
       buttonUp.current?.removeEventListener("click", prev);
       buttonDown.current?.removeEventListener("click", next);
       buttonLike.current?.removeEventListener("click", handleLike);
       buttonScrollDown.current?.removeEventListener("click", handleAutoPlay);
+      colapsePanel.current?.removeEventListener("click", handleColapsePanel);
     }
   }, [])
 
@@ -59,6 +62,9 @@ export default function FeedNav() {
     setLike(like => !like);
     fetchSimulate(like);
   }
+  function handleColapsePanel() {
+    dispatch({ type: "TOGGLE_PANEL" });
+  }
 
   return (
     <div className="nav" ref={nav}>
@@ -72,16 +78,13 @@ export default function FeedNav() {
         {like ? <HeartIconSolid className="size-4" /> : <HeartIcon className="size-4" />}
       </button>
       <button id="scroll-down" ref={buttonScrollDown}>
-        { !loop ? (
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M5 15C5 16.8565 5.73754 18.6371 7.05029 19.9498C8.36305 21.2626 10.1435 21.9999 12 21.9999C13.8565 21.9999 15.637 21.2626 16.9498 19.9498C18.2625 18.6371 19 16.8565 19 15V9C19 7.14348 18.2625 5.36305 16.9498 4.05029C15.637 2.73754 13.8565 2 12 2C10.1435 2 8.36305 2.73754 7.05029 4.05029C5.73754 5.36305 5 7.14348 5 9V15Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M12 6V14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M15 11L12 14L9 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        ) : (
-          <ArrowPathIcon className="size-4" />
-        )}
+        { loop ? <ArrowPathIcon className="size-4" /> : <ArrowLongDownIcon className="size-4" /> }
       </button>
+      { config.panel_exist && (
+        <button id="colapse_panel" ref={colapsePanel}>
+          {config.panel ? <ChevronDoubleRightIcon className="size-4" /> : <ChevronDoubleLeftIcon className="size-4" /> }
+        </button>
+      )}
       {/* <button id="collage" ref={buttonCollage}>
         <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" 
             viewBox="0 0 20.954 20.954">

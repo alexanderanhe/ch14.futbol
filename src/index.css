@@ -7,11 +7,3 @@ body {
   background-color: #000;
   color: #fff;
 }
-
-.waiting {
-  filter: blur(1px);
-  -webkit-filter: blur(1px);
-  .loader-container {
-    display: flex;
-  }
-}
