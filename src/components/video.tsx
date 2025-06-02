@@ -45,9 +45,9 @@ function Panel({data}: {data: Media[]}) {
   return (
     <>
     {data.map((media, i) => (
-      <div key={`panel-${media._id}`} className="flex flex-col mb-2">
-        <a href={`#video-${media._id}-${i}`} onClick={go(`video-${media._id}-${i}`)}>
-          <img className="w-full rounded-2xl bg-gray-200" src={
+      <div key={`panel-${media._id}`} className="flex flex-col gap-2 p-2 ">
+        <a href={`#video-${media._id}-${i}`} onClick={go(`video-${media._id}-${i}`)} className="opacity-80 hover:opacity-100">
+          <img className={`w-full rounded-2xl object-cover aspect-video bg-gray-200`} src={
             media.thumbnails?.images?.length
             ? `data:image/jpg;base64,${media.thumbnails?.images?.[0]}`
             : NoImage

@@ -22,7 +22,7 @@
   background-color: #000;
   height: 100svh;
   overflow-y: auto; 
-  padding: 0.5rem;
+  padding: 0 0 50svh 0;
   scroll-snap-type: y mandatory;
 
   -webkit-user-select: none;
