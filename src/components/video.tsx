@@ -3,9 +3,12 @@ import { goItem, VideoContainer, VideoPlayer } from "../tik-player";
 import { fetchData } from "../data";
 import Nav from "../tik-player/nav";
 import NoImage from "../assets/no-image.webp"
+import { useAuth } from "@clerk/clerk-react";
 
 export default function Video() {
-  const data = use(fetchData('/video?')) as Media[];
+  const { getToken } = useAuth();
+  const token = use(getToken());
+  const data = use(fetchData('/video?', token ?? '')) as Media[];
   const [media] = useState<Media[]>(data);
   const VIDEO_API_URL = `${import.meta.env.VITE_API_URL}/video/stream`;
   const TRACK_API_URL = `${import.meta.env.VITE_API_URL}/video/vtt`;

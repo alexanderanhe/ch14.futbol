@@ -1,22 +1,26 @@
 const cache = new Map();
 
-export function fetchData(url: string) {
+export function fetchData(url: string, token: string) {
   if (!cache.has(url)) {
-    cache.set(url, getData(url));
+    cache.set(url, getData(url, token));
   }
   return cache.get(url);
 }
 
-async function getData(url: string) {
+async function getData(url: string, token: string) {
   if (url.startsWith('/video?')) {
-    return await getVideoResults(url.slice('/video?'.length));
+    return await getVideoResults(url.slice('/video?'.length), token);
   } else {
     Error('Not implemented');
   }
 }
 
-async function getVideoResults(query: string) {
-  const req = await fetch(`${import.meta.env.VITE_API_URL}/video?${query}`)
+async function getVideoResults(query: string, token: string) {
+  const req = await fetch(`${import.meta.env.VITE_API_URL}/video?${query}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    }
+  })
   const data = await req.json();
   return data;
 }
