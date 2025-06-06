@@ -21,17 +21,16 @@ async function getVideoResults(query: string) {
   return data;
 }
 
-export async function saveVideo({ title, description, fileName }: Record<string, string>) {
+export async function insertVideo(formData: FormData, token: string | null) {
   try {
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/video`, {
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/media/upload`, {
       method: "POST",
+      body: formData,
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({ title, description, fileName }),
-      // …
+        Authorization: `Bearer ${token}`,
+      }
     });
-    return await response.json();
+    return response;
   } catch(err) {
     console.log(err)
   }

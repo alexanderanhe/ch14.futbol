@@ -1,17 +1,39 @@
 import { VideoCameraIcon } from '@heroicons/react/24/solid'
-import { useState } from 'react'
-import { saveVideo } from '../data';
+import { useRef, useState } from 'react'
+import { insertVideo } from '../data';
+import { useAuth } from '@clerk/clerk-react';
 
 // template source: https://tailwindcss.com/plus/ui-blocks/application-ui/forms/form-layouts
 export default function UploadPage() {
-  const [form, setForm] = useState<Record<string, string>>({})
+  const [form, setForm] = useState<Record<string, string>>({ title: '' });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [state, setState] = useState<string[]>([]);
+  const { getToken } = useAuth();
+
   const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((prev) => ({...prev, [event.target.name]: event.target.value}));
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    console.log(form)
-    const save = await saveVideo(form);
-    console.log(save)
+    const fileInput = fileInputRef.current;
+    if (!fileInput || !fileInput.files?.length) return;
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    for (const key in form) {
+      formData.append(key, form[key]);
+    }
+    const token = await getToken();
+    const response = await insertVideo(formData, token);
+    const reader = response?.body?.getReader();
+    const decoder = new TextDecoder('utf-8');
+
+    while (reader) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      const chunk = decoder.decode(value);
+      setState(prev => [...prev, chunk.replace('data:', '')])
+      console.log(chunk); // mostrar logs en tiempo real
+    }
   }
   return (
     <form className='p-4' onSubmit={handleSubmit}>
@@ -55,7 +77,7 @@ export default function UploadPage() {
               <p className="mt-3 text-sm/6 text-gray-400">Write a few sentences about yourself.</p>
             </div>
 
-            <div className="sm:col-span-4">
+            {/* <div className="sm:col-span-4">
               <label className="block text-sm/6 font-medium">
                 FileName
                 <div className="mt-2">
@@ -72,7 +94,7 @@ export default function UploadPage() {
                   </div>
                 </div>
               </label>
-            </div>
+            </div> */}
 
             {/* <div className="sm:col-span-2 sm:col-start-1">
               <label className="block text-sm/6 font-medium">
@@ -90,30 +112,35 @@ export default function UploadPage() {
             </div> */}
 
             <div className="col-span-full">
-              <label htmlFor="cover-photo" className="block text-sm/6 font-medium">
-                Video
-              </label>
-              <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-200/25 px-6 py-10">
-                <div className="text-center">
-                  <VideoCameraIcon aria-hidden="true" className="mx-auto size-12 text-gray-300" />
-                  <div className="mt-4 flex text-sm/6 text-gray-400">
-                    <label
-                      htmlFor="file-upload"
-                      className="relative cursor-pointer rounded-md font-semibold text-indigo-600 focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 focus-within:outline-hidden hover:text-indigo-500"
-                    >
-                      <span>Upload a file</span>
-                      <input id="file-upload" name="file-upload" type="file" className="sr-only" />
-                    </label>
-                    <p className="pl-1">or drag and drop</p>
+              <label className="block text-sm/6 font-medium">
+                Video / imagen
+                <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-200/25 px-6 py-10">
+                  <div className="text-center">
+                    <VideoCameraIcon aria-hidden="true" className="mx-auto size-12 text-gray-300" />
+                    <div className="mt-4 flex text-sm/6 text-gray-400">
+                      <div
+                        className="relative cursor-pointer rounded-md font-semibold text-indigo-600 focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 focus-within:outline-hidden hover:text-indigo-500"
+                      >
+                        <span>Upload a file</span>
+                        <input ref={fileInputRef} id="file-upload" name="file-upload" type="file" className="sr-only" accept="image/*, video/*"  required />
+                      </div>
+                      <p className="pl-1">or drag and drop</p>
+                    </div>
+                    <p className="text-xs/5 text-gray-400">MP4 up to 50MB</p>
                   </div>
-                  <p className="text-xs/5 text-gray-400">MP4 up to 50MB</p>
                 </div>
-              </div>
+              </label>
             </div>
           </div>
         </div>
 
       </div>
+
+      <ul className="w-full max-h-28 overflow-y-auto">
+        {state.map((s, i) => (
+          <li key={`${s}-${i}`}>{s}</li>
+        ))}
+      </ul>
 
       <div className="mt-6 flex items-center justify-end gap-x-6">
         <button type="button" className="text-sm/6 font-semibold">
