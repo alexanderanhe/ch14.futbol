@@ -58,20 +58,20 @@ type Media = {
   title: string;
   description: string;
   metadata: {
+    duration: number;
+    size: number;
     mime_type: string;
+    extension: string;
+    width: number;
+    height: number;
+    ratio: string;
   };
   thumbnail: {
+    images?: string[];
     resolution: string;
     vframes: number;
   }
-  // borrar
-  external: boolean;
-  origin: string;
-  fileName: string;
-  type: TypeMedia;
-  format?: FormatProps;
-  stream?: StreamProps;
-  thumbnails?: Thumbnail;
+
   createdAt: Date;
-  deleted?: boolean;
+
 }

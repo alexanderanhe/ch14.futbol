@@ -29,7 +29,6 @@ export default function Video() {
               total: m.thumbnail.vframes,
               resolution: m.thumbnail.resolution,
             },
-            thumbnail: `${THUMB_API_URL}/${m._id}`,
           }}
           id={`video-${m._id}-${i}`}
           watermark={<WaterMark />}
@@ -58,8 +57,8 @@ function Panel({data}: {data: Media[]}) {
       <div key={`panel-${media._id}`} className="flex flex-col gap-2 p-2 ">
         <a href={`#video-${media._id}-${i}`} onClick={go(`video-${media._id}-${i}`)} className="opacity-80 hover:opacity-100">
           <img className={`w-full rounded-2xl object-cover aspect-video bg-gray-200`} src={
-            media.thumbnails?.images?.length
-            ? `data:image/jpg;base64,${media.thumbnails?.images?.[0]}`
+            media.thumbnail?.images?.length
+            ? `${media.thumbnail?.images?.[0]}`
             : NoImage
             } alt={media.title} draggable="false" />
           <h3>{media.title}</h3>

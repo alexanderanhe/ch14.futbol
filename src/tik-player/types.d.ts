@@ -3,7 +3,6 @@ export type VideoData = {
     author?: string;
     album?: string;
     poster?: string;
-    thumbnail?: string;
     thumbnails?: {
       collage: string;
       total: number;
