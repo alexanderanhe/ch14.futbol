@@ -11,6 +11,7 @@ export default function Video() {
   const data = use(fetchData('/video?', token ?? '')) as Media[];
   const [media] = useState<Media[]>(data);
   const VIDEO_API_URL = `${import.meta.env.VITE_API_URL}/video/stream`;
+  const THUMB_API_URL = `${import.meta.env.VITE_API_URL}/video/thumbnail`;
   const TRACK_API_URL = `${import.meta.env.VITE_API_URL}/video/vtt`;
   if (data.length === 0) {
     return (<p>No hay videos</p>);
@@ -21,13 +22,19 @@ export default function Video() {
         <VideoPlayer
           key={`video-${m._id}-${i}`}
           data={{
-            poster: `data:image/jpg;base64,${m.thumbnails?.images?.[0]}`,
-            thumbnails: m.thumbnails,
+            // poster: `data:image/jpg;base64,${m.thumbnails?.images?.[0]}`,
+            thumbnails: {
+              images: [],
+              collage: `${THUMB_API_URL}/${m._id}`,
+              total: m.thumbnail.vframes,
+              resolution: m.thumbnail.resolution,
+            },
+            thumbnail: `${THUMB_API_URL}/${m._id}`,
           }}
           id={`video-${m._id}-${i}`}
           watermark={<WaterMark />}
         >
-          <source data-src={`${VIDEO_API_URL}/${m._id}`} type={ m.type.mime } />
+          <source data-src={`${VIDEO_API_URL}/${m._id}`} type={ m.metadata.mime_type } />
           {Object.entries({ "en": `${TRACK_API_URL}/${m._id}`}).map(([lang, vtt]) => (
             <track key={`vtt-${lang}`} kind="captions" srcLang={lang} data-src={vtt} />
           ))}

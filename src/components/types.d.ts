@@ -57,6 +57,14 @@ type Media = {
   _id: string;
   title: string;
   description: string;
+  metadata: {
+    mime_type: string;
+  };
+  thumbnail: {
+    resolution: string;
+    vframes: number;
+  }
+  // borrar
   external: boolean;
   origin: string;
   fileName: string;
